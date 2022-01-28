@@ -22,10 +22,10 @@ NB. Find the derivative of the AR.
   order =. order - *order   NB. Decrement # orders remaining
 end.
 NB. resstg has the string form and order is the number of derivs unfinished.  Return appropriately
-if. order < 0 do. 13!:8 (3)  end.  NB. domain error if we don't know the integral
+if. order < 0 do. (LF,~LF taketo }. 13!:12'') 13!:8 (3)  end.  NB. domain error if we don't know the integral
 NB. Parse the verb to create a verb
 NB. Return the verb itself if it's the right order, otherwise error.  We could do secant approx instead of error
-if. order=0 do. resstg vnofu else. 13!:8 (3) end.
+if. order=0 do. resstg vnofu else. (LF,~LF taketo }. 13!:12'')13!:8 (3) end.
 )
 
 NB. Routine to handle unevaluable derivatives by approximation, or D:
@@ -141,7 +141,7 @@ if. 1 (>: L.) yar do.
   NB. Look it up in the derivative table
   if. (#primvb) > primno =. primvb i. yar do. primno {:: primderiv return. end.
   NB. If undifferentiable primitive, fail
-  13!:8 (3)
+  ('undifferentiable primitive: ',y,' ') 13!:8 (3)
 end.
 NB. Not a primitive or named verb.  Must be a 2-box list.  The first box indicates the (possibly invisible)
 NB. modifier; process it if we know it
@@ -176,38 +176,38 @@ case. <,'&' do.  NB. & - first check for bonded constant
         coeffs,'&p.' return.
       end.
     end.
-    if. *@#@$ nounarg do. 13!:8 (3) end. NB. except for p. only atomic m is recognized
+    if. *@#@$ nounarg do. ('only atomic m allowed in m& (except with p.) in: ',y,' ') 13!:8 (3) end. NB. except for p. only atomic m is recognized
     NB. Look it up in the derivative table, execute it on m, return string result
     if. (#primmandv) > primno =. primmandv i. verbarg do.
       (nounarg 1 : (primno {:: primmandvderiv)) strofu return.
     end.
     NB. If undifferentiable primitive, fail
-    13!:8 (3)
+    ('undifferentiable combination: ',y,' ')13!:8 (3)
   elseif. yar opisnoun 1 do.   NB. u&n  (u must be a verb)
     nounarg =. (yar opar 1) vnofaru  NB. n
     verbarg =. (yar opar 0)  NB. u as an AR
-    if. *@#@$ nounarg do. 13!:8 (3) end. NB. except for p. only atomic m is recognized
+    if. *@#@$ nounarg do. ('only atomic n allowed in &n in: ',y,' ') 13!:8 (3) end. NB. except for p. only atomic m is recognized
     NB. Look it up in the derivative table, execute it on m, return string result
     if. (#primuandn) > primno =. primuandn i. verbarg do.
       (nounarg 1 : (primno {:: primuandnderiv)) strofu return.
     end.
     NB. If undifferentiable primitive, fail
-    13!:8 (3)
+    ('undifferentiable combination: ',y,' ') 13!:8 (3)
   end.
   NB. fallthrough cases are u&v
 
 fcase. ;:'&:@@:' do.  NB. chain rule, including fallthrough from &
-  if. yar opisnoun 1 do. 13!:8 (3) end.  NB. v must be a verb
+  if. yar opisnoun 1 do. ('v must be a verb in: ',y,' ') 13!:8 (3) end.  NB. v must be a verb Note: will never be called for &: and @: as they are domain errors when applied to a noun.
   uop =. yar opstr 0   NB. the verb as a string
   vop =. yar opstr 1   NB. the verb as a verb
   (derivstg vop) ftymes (derivstg uop) atops vop return.
 
 case. <'^:' do.  NB. power
-  if. yar opisnoun 0 do. 13!:8 (3) end.  NB. u must be a verb
-  if. -. yar opisnoun 1 do. 13!:8 (3) end.  NB. v must be a noun
+  if. yar opisnoun 0 do. ('u must be a verb in: ',y,' ') 13!:8 (3) end.  NB. u must be a verb TODO: isn't this always the case?
+  if. -. yar opisnoun 1 do. ('n in ^:n must be a noun in: ',y,' ') 13!:8 (3) end.  NB. v (n) must be a noun
   nop =. (yar opar 1) vnofaru  NB. extract the noun
-  if. '' -.@-: $nop do. 13!:8 (3) end.  NB. must be an atom
-  if. nop ~: <.nop do. 13!:8 (3) end. NB. must be integral
+  if. '' -.@-: $nop do. ('n in ^:n must be an atom in: ',y,' ') 13!:8 (3) end.  NB. must be an atom 
+  if. nop ~: <.nop do. ('n in ^:n must be an integral number in: ',y,' ') 13!:8 (3) end. NB. must be integral TODO: isn't this always the case?
   uop =. (yar opar 0) vnofaru   NB. the verb as a verb
   if. nop < 0 do.  NB. If power is negative, replace the function with its inverse
     uop =. ((< (1;0)&{:: yar) 5!:0) b. _1  NB. inverse as a string
@@ -223,7 +223,7 @@ case. <'^:' do.  NB. power
   return.
 
 case. <,'"' do.  NB. rank
-  if. -. yar opisnoun 1 do. 13!:8 (3) end.  NB. v must be a noun
+  if. -. yar opisnoun 1 do. ('rank specified with " must be a noun in: ',y,' ') 13!:8 (3) end.  NB. v must be a noun
   nop =. (yar opar 1) vnofaru   NB. extract the noun
   uop =. (yar opar 0) vnofaru  NB. v, either verb or noun
   if. yar opisnoun 0 do.
@@ -235,13 +235,14 @@ case. <,'~' do.  NB. reflexive - only a few verbs supported
   NB. Look it up in the derivative table
   if. (#primrefvb) > primno =. primrefvb i. 1 {:: yar do. primno {:: primrefderiv return. end.
 end.
-13!:8 (3)   NB. Unknown or unprocessed modifier, fail
+
+('unknown or unprocessed modifier in: ',y,' ') 13!:8 (3)   NB. Unknown or unprocessed modifier, fail
 )
 
 NB. Canned table of derivatives for the primitive verbs
 'primvb primderiv' =: <"1 |: (({. ; deb@:}.)~ i.&' ');._2 (0 : 0)
 -  _1"0
--. _1:0
+-. _1"0
 <: 1"0
 >: 1"0
 [ 1"0
@@ -324,7 +325,7 @@ case. 3 do. %@*:@(2&o.)
 case. 5 do. 6&o.
 case. 6 do. 5&o.
 case. 7 do. %@*:@(6&o.)
-case. do. 13!:8 (3) NB. if unknown type, fail
+case. do. ('unimplemented derivative for ',(":m),'&o.') 13!:8 (3) NB. if unknown type, fail
 end.
 )
 
